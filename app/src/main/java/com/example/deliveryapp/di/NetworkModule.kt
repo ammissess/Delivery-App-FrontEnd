@@ -58,4 +58,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthRepository(api: AuthApi, dataStore: DataStoreManager): AuthRepository = AuthRepository(api, dataStore)
+
+
 }

@@ -13,3 +13,26 @@ data class SignupRequestDto(
     val phone: String,
     val address: String
 )
+
+// Verify OTP request (đăng ký/email verify)
+data class VerifyOtpRequestDto(
+    val email: String,
+    val otp: String
+)
+
+// Forgot password request
+data class ForgotPasswordRequestDto(
+    val email: String
+)
+
+// Reset password request
+data class ResetPasswordDto(
+    val token: String,
+    val new_password: String
+)
+
+// Reset password response (server trả về token)
+data class ResetTokenDto(
+    val reset_token: String,
+    val expires_in: Int
+)

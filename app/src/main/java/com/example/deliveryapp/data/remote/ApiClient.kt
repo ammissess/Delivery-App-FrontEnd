@@ -10,12 +10,18 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     fun create(authInterceptor: Interceptor? = null): Retrofit {
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+        // bật log chi tiết
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         val builder = OkHttpClient.Builder()
-            .addInterceptor(logging)
+            .addInterceptor(logging) // 👈 thêm vào client
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
+
         authInterceptor?.let { builder.addInterceptor(it) }
+
         return Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
             .client(builder.build())

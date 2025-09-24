@@ -7,35 +7,36 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.deliveryapp.ui.auth.LoginScreen
-import com.example.deliveryapp.ui.auth.SignupScreen
+import com.example.deliveryapp.ui.auth.*
 import com.example.deliveryapp.ui.home.HomeScreen
-import com.example.deliveryapp.ui.order.OrderStatusScreen
-import com.example.deliveryapp.ui.product.ProductDetailScreen
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
-    NavHost(navController, startDestination = Screen.Login.route) {
-        composable(Screen.Login.route) {
-            LoginScreen(navController)  //{ navController.navigate(Screen.Home.route) }
-        }
-        composable(Screen.Signup.route) {
-            SignupScreen(navController) //{ navController.navigate(Screen.Login.route) }
-        }
-        composable(Screen.Home.route) {
-            HomeScreen(navController)
-        }
-        composable(Screen.ProductDetail.route,
-            arguments = listOf(navArgument("productId") { type = NavType.LongType })
+    NavHost(
+        navController = navController,
+        startDestination = "login"
+    ) {
+        composable("login") { LoginScreen(navController) }
+        composable("signup") { SignupScreen(navController) }
+
+        composable(
+            route = "otp_verify/{email}",
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("productId") ?: 0L
-            ProductDetailScreen(navController, productId = id)
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            OtpVerifyScreen(navController, email)
         }
-        composable(Screen.OrderStatus.route,
-            arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+
+        composable("forgot_password") { ForgotPasswordScreen(navController) }
+
+        composable(
+            route = "reset_password/{email}",
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("orderId") ?: 0L
-            OrderStatusScreen(id)
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            ResetPasswordScreen(navController, email)
         }
+
+        composable("home") { HomeScreen(navController) }
     }
 }
