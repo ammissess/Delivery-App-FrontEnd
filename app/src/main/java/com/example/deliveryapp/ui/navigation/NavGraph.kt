@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.deliveryapp.ui.auth.*
 import com.example.deliveryapp.ui.home.HomeScreen
+import com.example.deliveryapp.ui.product.ProductDetailScreen
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
@@ -27,6 +28,14 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             OtpVerifyScreen(navController, email)
         }
 
+        //route chi tiet san pham Screen
+        composable(Screen.ProductDetail.route,
+            arguments = listOf(navArgument("productId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("productId") ?: 0L
+            ProductDetailScreen(navController, productId = id)
+        }
+
         composable("forgot_password") { ForgotPasswordScreen(navController) }
 
         composable(
@@ -37,6 +46,13 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             ResetPasswordScreen(navController, email)
         }
 
-        composable("home") { HomeScreen(navController) }
+        //an vao san pham
+        composable(
+            Screen.ProductDetail.route,
+            arguments = listOf(navArgument("productId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("productId") ?: 0L
+            ProductDetailScreen(navController, productId = id)  // Pass id vào param
+        }
     }
 }

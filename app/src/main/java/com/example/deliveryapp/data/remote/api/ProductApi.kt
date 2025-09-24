@@ -13,8 +13,11 @@ interface ProductApi {
         @Query("limit") limit: Int = 20
     ): Response<ProductsListResponse>
 
+//    @GET("products/{id}")
+//    suspend fun getProductById(@Path("id") id: Long): Response<ProductDto>
+
     @GET("products/{id}")
-    suspend fun getProductById(@Path("id") id: Long): Response<ProductDto>
+    suspend fun getProductById(@Path("id") id: Long): Response<ProductWrapper>
 }
 
 data class ProductsListResponse(
@@ -27,4 +30,8 @@ data class Pagination(
     val limit: Int,
     val total: Int,
     val total_pages: Int
+)
+
+data class ProductWrapper(
+    val product: ProductDto
 )

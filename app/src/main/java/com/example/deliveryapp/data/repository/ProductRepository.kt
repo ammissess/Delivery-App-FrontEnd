@@ -24,11 +24,26 @@ class ProductRepository(private val api: ProductApi) {
         }
     }
 
-    suspend fun getProductById(id: Long): Resource<ProductDto> = withContext(Dispatchers.IO) {
+   /* suspend fun getProductById(id: Long): Resource<ProductDto> = withContext(Dispatchers.IO) {
         try {
             val resp = api.getProductById(id)
             if (resp.isSuccessful) {
                 resp.body()?.let { Resource.Success(it) } ?: Resource.Error("Empty body")
+            } else {
+                Resource.Error("Error: ${resp.code()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error: ${e.message}")
+        }
+    }
+
+    */
+
+    suspend fun getProductById(id: Long): Resource<ProductDto> = withContext(Dispatchers.IO) {
+        try {
+            val resp = api.getProductById(id)
+            if (resp.isSuccessful) {
+                resp.body()?.product?.let { Resource.Success(it) } ?: Resource.Error("Empty body")  // Extract từ wrapper
             } else {
                 Resource.Error("Error: ${resp.code()}")
             }
