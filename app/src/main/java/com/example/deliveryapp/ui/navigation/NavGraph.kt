@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.deliveryapp.ui.auth.*
+import com.example.deliveryapp.ui.auth.*  // Import tất cả screens từ auth (Login, Signup, OtpVerify, ForgotPassword, ResetPassword)
 import com.example.deliveryapp.ui.home.HomeScreen
 import com.example.deliveryapp.ui.product.ProductDetailScreen
 
@@ -28,12 +28,16 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             OtpVerifyScreen(navController, email)
         }
 
-        //route chi tiet san pham Screen
-        composable(Screen.ProductDetail.route,
+        // Route cho HomeScreen (thêm để fix lỗi navigate đến "home" sau login)
+        composable("home") { HomeScreen(navController) }
+
+        // Route chi tiết sản phẩm (loại bỏ duplicate, giữ một cái)
+        composable(
+            route = Screen.ProductDetail.route,
             arguments = listOf(navArgument("productId") { type = NavType.LongType })
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getLong("productId") ?: 0L
-            ProductDetailScreen(navController, productId = id)
+            ProductDetailScreen(navController, productId = id)  // Pass id vào param nếu screen cần
         }
 
         composable("forgot_password") { ForgotPasswordScreen(navController) }
@@ -44,15 +48,6 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         ) { backStackEntry ->
             val email = backStackEntry.arguments?.getString("email") ?: ""
             ResetPasswordScreen(navController, email)
-        }
-
-        //an vao san pham
-        composable(
-            Screen.ProductDetail.route,
-            arguments = listOf(navArgument("productId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getLong("productId") ?: 0L
-            ProductDetailScreen(navController, productId = id)  // Pass id vào param
         }
     }
 }
