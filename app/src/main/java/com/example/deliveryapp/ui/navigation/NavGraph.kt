@@ -37,5 +37,14 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             val id = backStackEntry.arguments?.getLong("orderId") ?: 0L
             OrderStatusScreen(id)
         }
+
+        //an vao san pham
+        composable(
+            Screen.ProductDetail.route,
+            arguments = listOf(navArgument("productId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("productId") ?: 0L
+            ProductDetailScreen(navController, productId = id)  // Pass id vào param
+        }
     }
 }

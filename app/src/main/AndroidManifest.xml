@@ -11,7 +11,9 @@
         android:name=".DeliveryApp"
         android:allowBackup="true"
         android:label="DeliveryApp"
-        android:theme="@style/Theme.DeliveryApp">
+        android:theme="@style/Theme.DeliveryApp"
+        android:networkSecurityConfig="@xml/network_security_config">
+
         <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
