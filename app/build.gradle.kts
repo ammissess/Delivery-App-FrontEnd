@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     kotlin("android")
-    id("com.google.devtools.ksp")
+    kotlin("kapt")
     id("com.google.dagger.hilt.android")
 }
 
@@ -77,7 +77,7 @@ dependencies {
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-compiler:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     // Retrofit + OkHttp
@@ -101,11 +101,11 @@ dependencies {
     // Javapoet
     implementation("com.squareup:javapoet:1.13.0")
 
-    // Testing
+// Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.09.01"))  // SỬA: Đồng bộ BOM cho test
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
