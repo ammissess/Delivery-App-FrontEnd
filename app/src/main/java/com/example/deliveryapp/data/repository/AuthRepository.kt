@@ -11,8 +11,27 @@ class AuthRepository(
     private val dataStore: DataStoreManager
 ) {
     suspend fun signup(req: SignupRequestDto): Resource<Unit> = safeCall { api.signup(req) }
+
     suspend fun verifyOtp(req: VerifyOtpRequestDto): Resource<Unit> = safeCall { api.verifyOtp(req) }
-    suspend fun login(req: LoginRequestDto): Resource<AuthResponseDto> = safeCall { api.login(req) }
+
+    suspend fun login(req: LoginRequestDto): Resource<AuthResponseDto> {
+        return try {
+            val resp = api.login(req)
+            if (resp.isSuccessful) {
+                resp.body()?.let { authResp ->
+                    // ✅ Lưu token vào DataStore khi login thành công
+                    dataStore.saveTokens(authResp.access_token, authResp.refresh_token)
+                    Resource.Success(authResp)
+                } ?: Resource.Error("Empty response")
+            } else {
+                val errorMsg = resp.errorBody()?.string() ?: "Unknown error"
+                Resource.Error(errorMsg)
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Unexpected error")
+        }
+    }
+
     suspend fun forgotPassword(email: String): Resource<Unit> =
         safeCall { api.forgotPassword(ForgotPasswordRequestDto(email)) }
 

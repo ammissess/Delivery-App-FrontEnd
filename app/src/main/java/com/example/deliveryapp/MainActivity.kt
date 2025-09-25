@@ -12,8 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import com.example.deliveryapp.ui.navigation.NavGraph
 import dagger.hilt.android.AndroidEntryPoint
+import com.example.deliveryapp.ui.navigation.NavGraph
+import com.example.deliveryapp.ui.navigation.Screen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -21,17 +22,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(  // Status bar sáng (text đen)
+            statusBarStyle = SystemBarStyle.light(
                 android.graphics.Color.TRANSPARENT,
                 android.graphics.Color.TRANSPARENT
             ),
-            navigationBarStyle = SystemBarStyle.light(  // Nav bar sáng
+            navigationBarStyle = SystemBarStyle.light(
                 android.graphics.Color.TRANSPARENT,
                 android.graphics.Color.TRANSPARENT
             )
         )
 
-        // Optional: Set decor không fit system windows (cho edge-to-edge)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
@@ -39,10 +39,11 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .statusBarsPadding()  // THÊM: Padding tự động cho status bar (tránh tràn camera)
-                        .navigationBarsPadding()  // Padding cho nav bar nếu cần
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
                 ) {
-                    NavGraph()  // Hoặc HomeScreen của mày
+                    // ✅ Chạy NavGraph với startDestination = Splash
+                    NavGraph(startDestination = Screen.Splash.route)
                 }
             }
         }

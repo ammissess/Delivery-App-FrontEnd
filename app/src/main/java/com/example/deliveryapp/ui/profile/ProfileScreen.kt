@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.Notifications
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,10 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = hiltViewModel() // ✅ inject ViewModel
+) {
     // Placeholder user data
     var userName by remember { mutableStateOf("Nguyễn Văn A") }
     var email by remember { mutableStateOf("user@example.com") }
@@ -102,10 +104,13 @@ fun ProfileScreen(navController: NavController) {
                     navController.navigate("orders")
                 }
                 SettingsItem("Cài đặt thông báo", Icons.Default.Notifications) {
-                    // Handle settings
+                    // TODO: Notification settings
                 }
                 Divider(modifier = Modifier.padding(vertical = 4.dp))
                 SettingsItem("Đăng xuất", Icons.Default.ExitToApp) {
+                    // ✅ Xoá token ở DataStore
+                    viewModel.logout()
+                    // ✅ Điều hướng về login
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
@@ -150,7 +155,7 @@ private fun SettingsItem(
         Text(text = title, style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(1f))
         Icon(
-            imageVector = Icons.Default.KeyboardArrowRight, // icon mũi tên phải
+            imageVector = Icons.Default.KeyboardArrowRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )

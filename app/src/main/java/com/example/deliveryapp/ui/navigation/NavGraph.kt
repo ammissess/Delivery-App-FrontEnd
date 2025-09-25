@@ -13,16 +13,25 @@ import com.example.deliveryapp.ui.product.ProductDetailScreen
 import com.example.deliveryapp.ui.messages.MessagesScreen
 import com.example.deliveryapp.ui.order.OrderStatusScreen
 import com.example.deliveryapp.ui.profile.ProfileScreen
+import com.example.deliveryapp.ui.auth.SplashScreen   // ✅ import Splash
 
 @Composable
-fun NavGraph(navController: NavHostController = rememberNavController()) {
+fun NavGraph(
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = Screen.Splash.route // ✅ Splash mặc định
+) {
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = startDestination
     ) {
+        // ✅ Splash route
+        composable(Screen.Splash.route) {
+            SplashScreen(navController)
+        }
+
         // Authentication routes
-        composable("login") { LoginScreen(navController) }
-        composable("signup") { SignupScreen(navController) }
+        composable(Screen.Login.route) { LoginScreen(navController) }
+        composable(Screen.Signup.route) { SignupScreen(navController) }
 
         composable(
             route = "otp_verify/{email}",
@@ -43,19 +52,16 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         }
 
         // Main app routes
-        composable("home") { HomeScreen(navController) }
+        composable(Screen.Home.route) { HomeScreen(navController) }
 
-        composable("messages") {
-            MessagesScreen(navController)
-        }
+        composable("messages") { MessagesScreen(navController) }
 
         composable("orders") {
+            // bạn có thể truyền orderId thực tế khi navigate
             OrderStatusScreen(orderId = 0L)
         }
 
-        composable("profile") {
-            ProfileScreen(navController)
-        }
+        composable("profile") { ProfileScreen(navController) }
 
         // Product detail route
         composable(
