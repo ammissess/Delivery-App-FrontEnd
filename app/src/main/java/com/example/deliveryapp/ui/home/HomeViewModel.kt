@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// CartItem data class
+data class CartItem(val product: ProductDto, val quantity: Int = 1)
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getProducts: GetProductsUseCase,
@@ -38,6 +41,10 @@ class HomeViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    // Giỏ hàng
+    private val _cart = MutableStateFlow<List<CartItem>>(emptyList())
+    val cart: StateFlow<List<CartItem>> = _cart
+
     init {
         fetchProducts()
         fetchCategories()
@@ -61,7 +68,6 @@ class HomeViewModel @Inject constructor(
     /** Fake API categories (anh có thể thay bằng repo thực tế) */
     fun fetchCategories() {
         viewModelScope.launch {
-            // TODO: nếu backend có API thì gọi repo.getCategories()
             _categories.value = listOf("Tất cả", "Trái cây", "Đồ uống", "Đồ ăn nhanh")
         }
     }
@@ -72,11 +78,9 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // TODO: thay bằng repository.getProductsByCategory(category)
                 val result = if (category == "Tất cả") {
                     getProducts(1)
                 } else {
-                    // Demo: lọc bằng name.contains
                     val all = getProducts(1)
                     if (all is Resource.Success) {
                         Resource.Success(all.data?.filter {
@@ -119,10 +123,42 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Đăng xuất */
-    fun logout() {
-        viewModelScope.launch {
-            authRepository.logout()  // Clear tokens từ DataStore
+    /** Giỏ hàng */
+    fun addToCart(product: ProductDto) {
+        val current = _cart.value.toMutableList()
+        val index = current.indexOfFirst { it.product.id == product.id }
+        if (index >= 0) {
+            val item = current[index]
+            current[index] = item.copy(quantity = item.quantity + 1)
+        } else {
+            current.add(CartItem(product, 1))
         }
+        _cart.value = current
+    }
+
+    fun increaseQty(product: ProductDto) = addToCart(product)
+
+    fun decreaseQty(product: ProductDto) {
+        val current = _cart.value.toMutableList()
+        val index = current.indexOfFirst { it.product.id == product.id }
+        if (index >= 0) {
+            val item = current[index]
+            if (item.quantity > 1) {
+                current[index] = item.copy(quantity = item.quantity - 1)
+            } else {
+                current.removeAt(index)
+            }
+        }
+        _cart.value = current
+    }
+
+    fun getCartQuantity(productId: Long): Int {
+        return _cart.value.find { it.product.id == productId }?.quantity ?: 0
+    }
+
+    fun clearCart() { _cart.value = emptyList() }
+
+    fun logout() {
+        viewModelScope.launch { authRepository.logout() }
     }
 }

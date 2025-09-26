@@ -10,19 +10,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.deliveryapp.ui.common.InfoDialog
 import com.example.deliveryapp.utils.Resource
-import kotlinx.coroutines.launch
 
 @Composable
-fun ResetPasswordScreen(navController: NavController, email: String, viewModel: AuthViewModel = hiltViewModel()) {
+fun ResetPasswordScreen(
+    navController: NavController,
+    email: String,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     var otp by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
+
     val verifyState by viewModel.verifyResetOtpState.collectAsState()
     val resetState by viewModel.resetPasswordState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -31,49 +37,91 @@ fun ResetPasswordScreen(navController: NavController, email: String, viewModel: 
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Reset Password", style = MaterialTheme.typography.headlineSmall)
-            Text("Enter OTP and new password for $email")
-            Spacer(Modifier.height(16.dp))
+            Text("Đặt lại mật khẩu", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text("Nhập mã OTP và mật khẩu mới cho $email")
 
-            OutlinedTextField(value = otp, onValueChange = { otp = it }, label = { Text("OTP") })
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(
+                value = otp,
+                onValueChange = { otp = it },
+                label = { Text("OTP") },
+                modifier = Modifier.fillMaxWidth()
+            )
             OutlinedTextField(
                 value = newPassword,
                 onValueChange = { newPassword = it },
-                label = { Text("New Password") },
-                visualTransformation = PasswordVisualTransformation()
+                label = { Text("Mật Khẩu Mới") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(Modifier.height(16.dp))
 
             Button(
                 onClick = { viewModel.verifyOtpForReset(email, otp) },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Verify OTP") }
+            ) {
+                Text("Xác minh OTP")
+            }
 
             AnimatedVisibility(visible = verifyState is Resource.Loading || resetState is Resource.Loading) {
                 CircularProgressIndicator()
             }
 
+            // Kiểm tra verify OTP
             when (val s = verifyState) {
-                is Resource.Error -> LaunchedEffect(s) { scope.launch { snackbarHostState.showSnackbar("❌ ${s.message}") } }
+                is Resource.Error -> {
+                    LaunchedEffect(s) {
+                        dialogMessage = "❌ ${s.message}"
+                        showDialog = true
+                    }
+                }
                 is Resource.Success -> {
-                    val resetToken = s.data?.reset_token ?: ""
-                    LaunchedEffect(resetToken, newPassword) {
+                    LaunchedEffect(s) {
+                        val resetToken = s.data?.reset_token ?: ""
                         if (newPassword.isNotBlank()) {
                             viewModel.resetPassword(resetToken, newPassword)
+                        } else {
+                            dialogMessage = "❌ Vui lòng nhập mật khẩu mới"
+                            showDialog = true
                         }
                     }
                 }
                 else -> {}
             }
 
+            // Kiểm tra reset password
             when (val s = resetState) {
-                is Resource.Error -> LaunchedEffect(s) { scope.launch { snackbarHostState.showSnackbar("❌ ${s.message}") } }
-                is Resource.Success -> LaunchedEffect(s) {
-                    scope.launch { snackbarHostState.showSnackbar("✅ Password reset successfully!") }
-                    navController.navigate("login")
+                is Resource.Error -> {
+                    LaunchedEffect(s) {
+                        dialogMessage = "❌ ${s.message}"
+                        showDialog = true
+                    }
+                }
+                is Resource.Success -> {
+                    LaunchedEffect(s) {
+                        dialogMessage = "✅ Đổi mật khẩu thành công!"
+                        showDialog = true
+                    }
                 }
                 else -> {}
             }
         }
+    }
+
+    if (showDialog) {
+        InfoDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showDialog = false
+                // Nếu đổi mật khẩu thành công thì điều hướng về login
+                if (resetState is Resource.Success) {
+                    navController.navigate("login") {
+                        popUpTo("reset_password/$email") { inclusive = true }
+                    }
+                }
+            }
+        )
     }
 }

@@ -9,17 +9,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.deliveryapp.ui.common.InfoDialog
 import com.example.deliveryapp.utils.Resource
-import kotlinx.coroutines.launch
 
 @Composable
-fun ForgotPasswordScreen(navController: NavController, viewModel: AuthViewModel = hiltViewModel()) {
+fun ForgotPasswordScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     var email by remember { mutableStateOf("") }
     val state by viewModel.forgotPassState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -28,12 +32,20 @@ fun ForgotPasswordScreen(navController: NavController, viewModel: AuthViewModel 
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("🔐 Forgot Password?", style = MaterialTheme.typography.headlineSmall)
+            Text("🔐 Quên Mật Khẩu?", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(16.dp))
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(16.dp))
-            Button(onClick = { viewModel.forgotPassword(email) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Send OTP")
+            Button(
+                onClick = { viewModel.forgotPassword(email) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Gửi OTP")
             }
 
             AnimatedVisibility(visible = state is Resource.Loading) {
@@ -41,13 +53,32 @@ fun ForgotPasswordScreen(navController: NavController, viewModel: AuthViewModel 
             }
 
             when (val s = state) {
-                is Resource.Error -> LaunchedEffect(s) { scope.launch { snackbarHostState.showSnackbar("❌ ${s.message}") } }
-                is Resource.Success -> LaunchedEffect(s) {
-                    scope.launch { snackbarHostState.showSnackbar("✅ OTP sent to $email") }
-                    navController.navigate("reset_password/$email")
+                is Resource.Error -> {
+                    LaunchedEffect(s) {
+                        dialogMessage = "❌ ${s.message}"
+                        showDialog = true
+                    }
+                }
+                is Resource.Success -> {
+                    LaunchedEffect(s) {
+                        dialogMessage = "✅ OTP đã được gửi đến $email"
+                        showDialog = true
+                    }
                 }
                 else -> {}
             }
         }
+    }
+
+    if (showDialog) {
+        InfoDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showDialog = false
+                if (state is Resource.Success) {
+                    navController.navigate("reset_password/$email")
+                }
+            }
+        )
     }
 }

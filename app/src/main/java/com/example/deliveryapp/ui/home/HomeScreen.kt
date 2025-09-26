@@ -6,14 +6,17 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,6 +26,8 @@ import com.example.deliveryapp.data.remote.dto.ProductDto
 import com.example.deliveryapp.ui.navigation.Screen
 import com.example.deliveryapp.utils.Resource
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,184 +38,184 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
-    // Thu thập states từ ViewModel
     val productsState by homeViewModel.products.collectAsState()
     val isLoading by homeViewModel.isLoading.collectAsState()
     val categories by homeViewModel.categories.collectAsState()
     val selectedCategory by homeViewModel.selectedCategory.collectAsState()
-    val errorMessage by homeViewModel.errorMessage.collectAsState()
+    val cart by homeViewModel.cart.collectAsState()
 
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-
     var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var showCartSheet by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        selectedTab = 0
-    }
+    Box(Modifier.fillMaxSize()) {
+        ModalNavigationDrawer(
+            drawerContent = {
+                ModalDrawerSheet {
+                    Text("Danh mục", modifier = Modifier.padding(16.dp))
 
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    text = "Danh mục",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-                categories.forEach { category ->
-                    Text(
-                        text = category,
+                    categories.forEach { category ->
+                        Text(
+                            text = category,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    scope.launch { drawerState.close() }
+                                    homeViewModel.fetchProductsByCategory(category)
+                                }
+                                .padding(16.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                scope.launch { drawerState.close() }
-                                homeViewModel.fetchProductsByCategory(category)
+                                homeViewModel.logout()
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
-                            .padding(16.dp)
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Đăng xuất")
+                    }
+                }
+            },
+            drawerState = drawerState
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(selectedCategory.ifEmpty { "Tất cả" }) },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                        }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        navController = navController,
+                        selectedTab = selectedTab,
+                        onTabSelected = { newTab -> selectedTab = newTab }
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
+            ) { padding ->
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            homeViewModel.logout()
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(padding)
                 ) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đăng xuất")
-                }
-            }
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(selectedCategory.ifEmpty { "Tất cả sản phẩm" }) },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    navController = navController,
-                    selectedTab = selectedTab,
-                    onTabSelected = { newTab -> selectedTab = newTab }
-                )
-            }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = {
-                        searchQuery = it
-                        homeViewModel.searchProducts(it.text)
-                    },
-                    label = { Text("Tìm sản phẩm...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {
+                            searchQuery = it
+                            homeViewModel.searchProducts(it.text)
+                        },
+                        label = { Text("Tìm sản phẩm...") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
 
-                when (productsState) {
-                    is Resource.Loading -> {
-                        if (productsState.data == null || productsState.data?.isEmpty() == true) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
+                    when (productsState) {
+                        is Resource.Loading -> {
+                            if (productsState.data.isNullOrEmpty()) {
+                                Box(Modifier.fillMaxSize(), Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
                             }
-                        } else {
-                            ProductGrid(
-                                products = productsState.data as List<ProductDto>,
-                                onProductClick = { product ->
-                                    navController.navigate(Screen.ProductDetail.createRoute(product.id))
-                                },
-                                isLoading = isLoading
-                            )
                         }
-                    }
-                    is Resource.Error -> {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(productsState.message ?: "Đã xảy ra lỗi")
-                        }
-                    }
-                    is Resource.Success -> {
-                        val products = productsState.data as? List<ProductDto> ?: emptyList()
-                        if (products.isEmpty()) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Không có sản phẩm")
+                        is Resource.Error -> {
+                            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                                Text(productsState.message ?: "Đã xảy ra lỗi")
                             }
-                        } else {
-                            ProductGrid(
-                                products = products,
-                                onProductClick = { product ->
-                                    navController.navigate(Screen.ProductDetail.createRoute(product.id))
-                                },
-                                isLoading = isLoading
-                            )
                         }
+                        is Resource.Success -> {
+                            val products = productsState.data ?: emptyList()
+                            LazyVerticalGrid(
+                                state = rememberLazyGridState(),
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(products, key = { it.id }) { product: ProductDto ->
+                                    ProductItemDelivery(
+                                        product = product,
+                                        quantity = homeViewModel.getCartQuantity(product.id),
+                                        onAdd = { homeViewModel.addToCart(product) },
+                                        onIncrease = { homeViewModel.increaseQty(product) },
+                                        onDecrease = { homeViewModel.decreaseQty(product) },
+                                        onClick = {
+                                            navController.navigate(Screen.ProductDetail.createRoute(product.id))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        else -> {}
                     }
-                    else -> {}
                 }
+            }
+        }
+
+        // --- Cart bar dưới ---
+        if (cart.isNotEmpty()) {
+            val totalItems = cart.sumOf { it.quantity }
+            val totalPrice = cart.sumOf { it.product.price * it.quantity }
+
+            Box(Modifier.align(Alignment.BottomCenter)) {
+                CartBar(
+                    itemCount = totalItems,
+                    totalPrice = totalPrice,
+                    onCartClick = { showCartSheet = true },
+                    onCheckout = { navController.navigate("checkout") }
+                )
+            }
+        }
+
+        if (isLoading) {
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
     }
-}
 
-@Composable
-fun ProductGrid(
-    products: List<ProductDto>,
-    onProductClick: (ProductDto) -> Unit,
-    isLoading: Boolean
-) {
-    val lazyGridState = rememberLazyGridState()
-
-    Box {
-        LazyVerticalGrid(
-            state = lazyGridState,
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(products, key = { it.id }) { product: ProductDto ->
-                ProductItemDelivery(product = product, onClick = { onProductClick(product) })
-            }
-        }
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+    // --- BottomSheet ---
+    if (showCartSheet) {
+        ModalBottomSheet(onDismissRequest = { showCartSheet = false }) {
+            CartSheetContent(
+                cart = cart,
+                onIncrease = { homeViewModel.increaseQty(it) },
+                onDecrease = { homeViewModel.decreaseQty(it) },
+                onClear = { homeViewModel.clearCart() }
             )
         }
     }
 }
 
 @Composable
-fun ProductItemDelivery(product: ProductDto, onClick: () -> Unit) {
+fun ProductItemDelivery(
+    product: ProductDto,
+    quantity: Int,
+    onAdd: () -> Unit,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = Modifier.clickable { onClick() },
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
+        Column(Modifier.padding(12.dp)) {
             val mainImage = product.images.firstOrNull { it.is_main }?.url
                 ?: product.images.firstOrNull()?.url
 
@@ -222,22 +227,144 @@ fun ProductItemDelivery(product: ProductDto, onClick: () -> Unit) {
                     .height(120.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = product.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "$${product.price}",
+            Spacer(Modifier.height(8.dp))
+            Text(product.name, style = MaterialTheme.typography.titleMedium)
+            Text(formatPrice(product.price),
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = product.description ?: "",
+                color = MaterialTheme.colorScheme.primary)
+            Text(product.description ?: "",
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 2
-            )
+                maxLines = 2)
+
+            Spacer(Modifier.height(8.dp))
+
+            if (quantity > 0) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = onDecrease) { Text("−") }
+                    Text("$quantity", style = MaterialTheme.typography.titleMedium)
+                    OutlinedButton(onClick = onIncrease) { Text("+") }
+                }
+            } else {
+                Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+                    Text("+ Thêm")
+                }
+            }
         }
     }
+}
+
+/** CartBar có icon giỏ hàng */
+@Composable
+fun CartBar(
+    itemCount: Int,
+    totalPrice: Double,
+    onCartClick: () -> Unit,
+    onCheckout: () -> Unit
+) {
+    Surface(
+        tonalElevation = 6.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(32.dp).clickable { onCartClick() },
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Cart",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    if (itemCount > 0) {
+                        Surface(
+                            color = Color.Red,
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .align(Alignment.TopEnd)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "$itemCount",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(formatPrice(totalPrice),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary)
+            }
+            Button(onClick = onCheckout) { Text("Giao hàng") }
+        }
+    }
+}
+
+/** Nội dung BottomSheet */
+@Composable
+fun CartSheetContent(
+    cart: List<CartItem>,
+    onIncrease: (ProductDto) -> Unit,
+    onDecrease: (ProductDto) -> Unit,
+    onClear: () -> Unit
+) {
+    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Giỏ hàng", style = MaterialTheme.typography.titleLarge)
+            TextButton(onClick = onClear) { Text("Xóa tất cả") }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        cart.forEach { item ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = item.product.images.firstOrNull()?.url,
+                    contentDescription = item.product.name,
+                    modifier = Modifier.size(60.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(item.product.name, style = MaterialTheme.typography.bodyLarge)
+                    Text(formatPrice(item.product.price),
+                        color = MaterialTheme.colorScheme.primary)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { onDecrease(item.product) }) { Text("−") }
+                    Text("${item.quantity}", style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = { onIncrease(item.product) }) { Text("+") }
+                }
+            }
+            Divider()
+        }
+    }
+}
+
+fun formatPrice(price: Double): String {
+    val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+    return formatter.format(price)
 }

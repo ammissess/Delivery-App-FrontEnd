@@ -1,22 +1,25 @@
 package com.example.deliveryapp.ui.auth
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.deliveryapp.data.remote.dto.SignupRequestDto
 import com.example.deliveryapp.utils.Resource
-import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(navController: NavController, viewModel: AuthViewModel = hiltViewModel()) {
+fun SignupScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -24,12 +27,9 @@ fun SignupScreen(navController: NavController, viewModel: AuthViewModel = hiltVi
     var address by remember { mutableStateOf("") }
 
     val state by viewModel.signupState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -38,20 +38,20 @@ fun SignupScreen(navController: NavController, viewModel: AuthViewModel = hiltVi
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("🚚 Create Account", style = MaterialTheme.typography.headlineSmall)
+            Text("🚚 Tạo Tài Khoản", style = MaterialTheme.typography.headlineSmall)
 
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Tên") })
             OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text("Mật Khẩu") },
                 visualTransformation = PasswordVisualTransformation()
             )
-            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone") })
-            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Address") })
+            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Số Điện Thoại") })
+            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Địa chỉ") })
 
             Spacer(Modifier.height(16.dp))
 
@@ -60,14 +60,14 @@ fun SignupScreen(navController: NavController, viewModel: AuthViewModel = hiltVi
                     if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && phone.isNotBlank() && address.isNotBlank()) {
                         viewModel.signup(SignupRequestDto(name, email, password, phone, address))
                     } else {
-                        scope.launch { snackbarHostState.showSnackbar("❌ Please fill in all fields") }
+                        Toast.makeText(context, "❌ Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Sign Up") }
+            ) { Text("Đăng Ký") }
 
             TextButton(onClick = { navController.navigate("login") }) {
-                Text("Already have an account? → Login")
+                Text("Bạn đã có tài khoản? Đăng Nhập")
             }
 
             AnimatedVisibility(visible = state is Resource.Loading) {
@@ -77,12 +77,16 @@ fun SignupScreen(navController: NavController, viewModel: AuthViewModel = hiltVi
             when (val s = state) {
                 is Resource.Error -> {
                     LaunchedEffect(s) {
-                        scope.launch { snackbarHostState.showSnackbar(s.message ?: "Signup failed") }
+                        Toast.makeText(context, s.message ?: "Đăng ký thất bại", Toast.LENGTH_SHORT).show()
                     }
                 }
                 is Resource.Success -> {
                     LaunchedEffect(s) {
-                        scope.launch { snackbarHostState.showSnackbar("✅ Account created! Verify your email.") }
+                        Toast.makeText(
+                            context,
+                            "✅ Tạo tài khoản thành công! Vui lòng kiểm tra email để nhập OTP.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         navController.navigate("otp_verify/$email")
                     }
                 }
