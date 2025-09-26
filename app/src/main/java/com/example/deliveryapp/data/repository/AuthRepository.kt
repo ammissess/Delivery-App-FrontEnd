@@ -43,6 +43,8 @@ class AuthRepository(
 
     suspend fun logout() = dataStore.clearTokens()
 
+    suspend fun getProfile(): Resource<ProfileDto> = safeCall { api.getProfile() }
+
     private inline fun <T> safeCall(apiCall: () -> Response<T>): Resource<T> {
         return try {
             val resp = apiCall()

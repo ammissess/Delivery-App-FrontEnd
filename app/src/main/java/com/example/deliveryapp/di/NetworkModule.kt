@@ -23,9 +23,19 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    // ✅ AuthApi "raw" (không interceptor) chỉ phục vụ cho refresh token
     @Provides
     @Singleton
-    fun provideAuthInterceptor(dataStore: DataStoreManager): Interceptor = AuthInterceptor(dataStore)
+    @RawAuthApi
+    fun provideRawAuthApi(): AuthApi = ApiClient.create().create(AuthApi::class.java)
+
+    // ✅ Interceptor, cần RawAuthApi để gọi refresh (tránh vòng lặp)
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(
+        dataStore: DataStoreManager,
+        @RawAuthApi rawAuthApi: AuthApi
+    ): Interceptor = AuthInterceptor(dataStore, rawAuthApi)
 
     @Provides
     @Singleton
@@ -39,13 +49,16 @@ object NetworkModule {
     @Singleton
     fun provideOrderApi(retrofit: Retrofit): OrderApi = retrofit.create(OrderApi::class.java)
 
+    // ✅ Normal AuthApi (có interceptor) dành cho Repository
     @Provides
     @Singleton
+    @NormalAuthApi
     fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
 
     @Provides
     @Singleton
-    fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager = DataStoreManager(context)
+    fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreManager =
+        DataStoreManager(context)
 
     @Provides
     @Singleton
@@ -57,7 +70,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(api: AuthApi, dataStore: DataStoreManager): AuthRepository = AuthRepository(api, dataStore)
-
-
+    fun provideAuthRepository(
+        @NormalAuthApi api: AuthApi,
+        dataStore: DataStoreManager
+    ): AuthRepository = AuthRepository(api, dataStore)
 }

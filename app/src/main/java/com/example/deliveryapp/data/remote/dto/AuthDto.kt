@@ -36,3 +36,4 @@ data class ResetTokenDto(
     val reset_token: String,
     val expires_in: Int
 )
+data class RefreshTokenRequestDto(val refresh_token: String)

@@ -3,6 +3,7 @@ package com.example.deliveryapp.data.remote.api
 import com.example.deliveryapp.data.remote.dto.*
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface AuthApi {
@@ -23,4 +24,10 @@ interface AuthApi {
 
     @POST("reset-password")
     suspend fun resetPassword(@Body req: ResetPasswordDto): Response<Unit>
+
+    @GET("profile")
+    suspend fun getProfile(): Response<ProfileDto>
+    
+    @POST("refresh-access-token")
+    suspend fun refreshAccessToken(@Body req: RefreshTokenRequestDto): Response<AuthResponseDto>
 }
