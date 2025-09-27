@@ -11,4 +11,13 @@ sealed class Screen(val route: String) {
     object OrderStatus : Screen("order/{orderId}") {
         fun createRoute(id: Long) = "order/$id"
     }
+
+    object EditProfile : Screen("edit_profile")
+    object LocationPicker : Screen("location_picker")
+
+
+
+    object Profile : Screen("profile")
+    object CustomProfile : Screen("custom_profile")
+    object Register : Screen("register")
 }

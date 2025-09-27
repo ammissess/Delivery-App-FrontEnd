@@ -14,6 +14,8 @@ import com.example.deliveryapp.ui.messages.MessagesScreen
 import com.example.deliveryapp.ui.order.OrderStatusScreen
 import com.example.deliveryapp.ui.profile.ProfileScreen
 import com.example.deliveryapp.ui.auth.SplashScreen   // ✅ import Splash
+import com.example.deliveryapp.ui.map.LocationPickerScreen
+import com.example.deliveryapp.ui.profile.CustomProfile
 
 @Composable
 fun NavGraph(
@@ -62,6 +64,31 @@ fun NavGraph(
         }
 
         composable("profile") { ProfileScreen(navController) }
+
+        // Edit Profile route
+        composable(Screen.EditProfile.route) {
+            CustomProfile(navController)  // Tên file như yêu cầu của bạn
+        }
+
+        // Location Picker route (xử lý result từ LocationPicker)
+        composable(Screen.LocationPicker.route) {
+            val backStackEntry = navController.previousBackStackEntry
+            LocationPickerScreen(navController = navController)
+
+            // Xử lý result từ LocationPicker (lat, lng, address)
+            val selectedLat = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("selectedLat")
+            val selectedLng = navController.currentBackStackEntry?.savedStateHandle?.get<Double>("selectedLng")
+            val selectedAddress = navController.currentBackStackEntry?.savedStateHandle?.get<String>("selectedAddress")
+
+            if (selectedLat != null && selectedLng != null && selectedAddress != null) {
+                backStackEntry?.savedStateHandle?.set("lat", selectedLat)
+                backStackEntry?.savedStateHandle?.set("lng", selectedLng)
+                backStackEntry?.savedStateHandle?.set("address", selectedAddress)
+                navController.currentBackStackEntry?.savedStateHandle?.remove<Double>("selectedLat")
+                navController.currentBackStackEntry?.savedStateHandle?.remove<Double>("selectedLng")
+                navController.currentBackStackEntry?.savedStateHandle?.remove<String>("selectedAddress")
+            }
+        }
 
         // Product detail route
         composable(

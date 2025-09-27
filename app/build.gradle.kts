@@ -94,6 +94,9 @@ dependencies {
     implementation("com.mapbox.maps:android-ndk27:11.15.0")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.15.0")
 
+    //nut fix GpsFixed
+    implementation("androidx.compose.material:material-icons-extended")
+
     // Coil
     implementation("io.coil-kt:coil-compose:2.5.0")
 

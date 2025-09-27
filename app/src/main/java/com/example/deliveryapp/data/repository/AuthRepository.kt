@@ -45,6 +45,9 @@ class AuthRepository(
 
     suspend fun getProfile(): Resource<ProfileDto> = safeCall { api.getProfile() }
 
+    //sua thong tin nguoi dung
+    suspend fun updateProfile(req: UpdateProfileRequest): Resource<Unit> = safeCall { api.updateProfile(req) }
+
     private inline fun <T> safeCall(apiCall: () -> Response<T>): Resource<T> {
         return try {
             val resp = apiCall()

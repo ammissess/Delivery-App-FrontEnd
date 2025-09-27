@@ -5,6 +5,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApi {
     @POST("signup")
@@ -30,4 +31,8 @@ interface AuthApi {
     
     @POST("refresh-access-token")
     suspend fun refreshAccessToken(@Body req: RefreshTokenRequestDto): Response<AuthResponseDto>
+
+    // Thêm vào interface AuthApi
+    @PUT("profile")
+    suspend fun updateProfile(@Body req: UpdateProfileRequest): Response<Unit>
 }

@@ -13,8 +13,6 @@ interface ProductApi {
         @Query("limit") limit: Int = 20
     ): Response<ProductsListResponse>
 
-//    @GET("products/{id}")
-//    suspend fun getProductById(@Path("id") id: Long): Response<ProductDto>
 
     @GET("products/{id}")
     suspend fun getProductById(@Path("id") id: Long): Response<ProductWrapper>
