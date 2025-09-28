@@ -4,6 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.deliveryapp.data.remote.dto.ProductDto
+import com.example.deliveryapp.data.remote.dto.ReviewRequestDto
+import com.example.deliveryapp.data.remote.dto.ReviewResponseDto
+import com.example.deliveryapp.data.repository.ProductRepository
 import com.example.deliveryapp.domain.usecase.GetProductDetailUseCase
 import com.example.deliveryapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val getProduct: GetProductDetailUseCase,
+    private val repo: ProductRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -22,11 +26,14 @@ class ProductViewModel @Inject constructor(
     private val _product = MutableStateFlow<Resource<ProductDto>>(Resource.Loading())
     val product: StateFlow<Resource<ProductDto>> = _product
 
-    // Loading indicator
+    // State cho reviews
+    private val _reviews = MutableStateFlow<Resource<List<ReviewResponseDto>>>(Resource.Loading())
+    val reviews: StateFlow<Resource<List<ReviewResponseDto>>> = _reviews
+
+    // Loading indicator & error
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    // Thông báo lỗi
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
@@ -47,7 +54,9 @@ class ProductViewModel @Inject constructor(
             _errorMessage.value = null
             try {
                 _product.value = getProduct(id)
-                if (_product.value !is Resource.Success) {
+                if (_product.value is Resource.Success) {
+                    loadReviews(id) // load thêm reviews
+                } else {
                     _errorMessage.value = (_product.value as? Resource.Error)?.message ?: "Lỗi tải sản phẩm"
                 }
             } catch (e: Exception) {
@@ -59,8 +68,24 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    /** Reload sản phẩm (ví dụ: sau khi update) */
-    fun reloadProduct(id: Long) {
-        loadProduct(id)
+    /** Reload sản phẩm */
+    fun reloadProduct(id: Long) = loadProduct(id)
+
+    /** Load reviews cho sản phẩm */
+    fun loadReviews(productId: Long) {
+        viewModelScope.launch {
+            _reviews.value = Resource.Loading()
+            _reviews.value = repo.getReviews(productId)
+        }
+    }
+
+    /** Gửi review (rating + comment) */
+    fun submitReview(orderId: Long, productId: Long, rate: Int, content: String) {
+        viewModelScope.launch {
+            repo.createReview(
+                ReviewRequestDto(product_id = productId, order_id = orderId, rate = rate, content = content)
+            )
+            loadReviews(productId) // refresh review sau khi submit
+        }
     }
 }

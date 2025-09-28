@@ -11,7 +11,9 @@ data class ProductDto(
     @SerializedName("qty_initial") val qty_initial: Long?,
     @SerializedName("qty_sold") val qty_sold: Long?,
     @SerializedName("created_at") val created_at: Date?,  // Hoặc String? nếu parse sau
-    val images: List<ProductImageDto> = emptyList()
+    val images: List<ProductImageDto> = emptyList(),
+    val avgRate: Double = 0.0,
+    val reviewCount: Int = 0
 )
 
 data class ProductImageDto(
