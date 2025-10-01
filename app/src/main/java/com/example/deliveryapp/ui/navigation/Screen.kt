@@ -20,4 +20,7 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object CustomProfile : Screen("custom_profile")
     object Register : Screen("register")
+
+    //tao don giao hang
+    object Checkout : Screen("checkout")
 }

@@ -53,7 +53,8 @@ fun BottomNavigationBar(
             selected = selectedTab == 2,
             onClick = {
                 onTabSelected(2)
-                navController.navigate("orders") {
+               // navController.navigate("orders") {
+                navController.navigate("order_list") {  // ✅ Route mới
                     launchSingleTop = true
                     restoreState = true
                 }

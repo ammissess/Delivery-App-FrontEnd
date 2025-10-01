@@ -14,7 +14,11 @@ import com.example.deliveryapp.ui.messages.MessagesScreen
 import com.example.deliveryapp.ui.order.OrderStatusScreen
 import com.example.deliveryapp.ui.profile.ProfileScreen
 import com.example.deliveryapp.ui.auth.SplashScreen   // ✅ import Splash
+import com.example.deliveryapp.ui.home.CartItem
 import com.example.deliveryapp.ui.map.LocationPickerScreen
+import com.example.deliveryapp.ui.order.CheckoutScreen
+import com.example.deliveryapp.ui.order.OrderDetailScreen
+import com.example.deliveryapp.ui.order.OrderListScreen
 import com.example.deliveryapp.ui.profile.CustomProfile
 
 @Composable
@@ -64,6 +68,29 @@ fun NavGraph(
         }
 
         composable("profile") { ProfileScreen(navController) }
+
+        //Them nut checkout Giao hang
+        composable("checkout") {
+            val cart = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<List<CartItem>>("checkout_cart") ?: emptyList()
+
+            CheckoutScreen(navController, cart)
+        }
+
+        //Route sang màn hình order
+        // Thêm vào NavGraph:
+        composable("order_list") {
+            OrderListScreen(navController)
+        }
+
+        composable(
+            route = "order_detail/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+            OrderDetailScreen(navController, orderId)  // Tạo màn hình này nếu cần
+        }
 
         // Edit Profile route
         composable(Screen.EditProfile.route) {

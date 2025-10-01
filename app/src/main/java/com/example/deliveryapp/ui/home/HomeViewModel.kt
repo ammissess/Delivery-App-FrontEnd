@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 // CartItem data class
-data class CartItem(val product: ProductDto, val quantity: Int = 1)
+//data class CartItem(val product: ProductDto, val quantity: Int = 1)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(

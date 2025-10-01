@@ -1,5 +1,6 @@
 package com.example.deliveryapp.ui.home
 
+import android.os.Parcelable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -26,8 +27,16 @@ import com.example.deliveryapp.data.remote.dto.ProductDto
 import com.example.deliveryapp.ui.navigation.Screen
 import com.example.deliveryapp.utils.Resource
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import java.text.NumberFormat
 import java.util.*
+
+@Parcelize
+data class CartItem(
+    val product: ProductDto,
+    val quantity: Int = 1
+) : Parcelable
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,7 +186,13 @@ fun HomeScreen(
                     itemCount = totalItems,
                     totalPrice = totalPrice,
                     onCartClick = { showCartSheet = true },
-                    onCheckout = { navController.navigate("checkout") }
+                    //thay doi nut thanh Giao hang
+                   // onCheckout = { navController.navigate("checkout") }
+                    onCheckout = {
+                        // Truyền cart qua navigation
+                        navController.currentBackStackEntry?.savedStateHandle?.set("checkout_cart", cart)
+                        navController.navigate("checkout")
+                    }
                 )
             }
         }
