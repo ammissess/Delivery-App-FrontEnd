@@ -14,9 +14,17 @@ data class ProductDto(
     val price: Double,
     @SerializedName("qty_initial") val qty_initial: Long?,
     @SerializedName("qty_sold") val qty_sold: Long?,
+<<<<<<< HEAD
     @SerializedName("created_at") val created_at: Date?,
     val images: List<ProductImageDto> = emptyList()
 ) : Parcelable
+=======
+    @SerializedName("created_at") val created_at: Date?,  // Hoặc String? nếu parse sau
+    val images: List<ProductImageDto> = emptyList(),
+    val avgRate: Double = 0.0,
+    val reviewCount: Int = 0
+)
+>>>>>>> 14a83287a4d5d90fb078d1849622c3bac5e79eb8
 
 @Parcelize
 data class ProductImageDto(

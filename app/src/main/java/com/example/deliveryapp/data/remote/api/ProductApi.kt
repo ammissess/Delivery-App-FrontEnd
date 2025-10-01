@@ -5,6 +5,8 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.example.deliveryapp.data.remote.dto.*
+import retrofit2.http.*
 
 interface ProductApi {
     @GET("products")
@@ -16,6 +18,13 @@ interface ProductApi {
 
     @GET("products/{id}")
     suspend fun getProductById(@Path("id") id: Long): Response<ProductWrapper>
+
+    // ⭐ Thêm API Review
+    @POST("create-review")
+    suspend fun createReview(@Body req: ReviewRequestDto): Response<Unit>
+
+    @GET("products/{id}/reviews")
+    suspend fun getReviews(@Path("id") productId: Long): Response<ReviewsListResponse>
 }
 
 data class ProductsListResponse(
@@ -32,4 +41,11 @@ data class Pagination(
 
 data class ProductWrapper(
     val product: ProductDto
+)
+data class ReviewsListResponse(
+    val page: Int,
+    val limit: Int,
+    val totalCount: Int,
+    val totalPage: Int,
+    val reviews: List<ReviewResponseDto>
 )
